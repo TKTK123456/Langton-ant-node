@@ -231,7 +231,7 @@ const antGen = {
       };
       return convertRGB(hexToRgb(hex))
   },
-  convertImage: function(imageData, width, height, colorType) {
+  convertImage: function(imageData, width, height, colorType = "RGBA") {
       if (!this.gridInited) {
           this.init()
       }
