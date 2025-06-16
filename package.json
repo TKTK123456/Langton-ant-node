@@ -1,6 +1,6 @@
 {
-  "name": "nodejs",
-  "version": "1.0.0",
+  "name": "langton-ant-rule-gen",
+  "version": "1.0.1-alpha",
   "description": "",
   "main": "index.js",
   "type": "module",
