@@ -231,7 +231,7 @@ const antGen = {
       };
       return convertRGB(hexToRgb(hex))
   },
-  convertImage: function(imageData, width, height) {
+  convertImage: function(imageData, width, height, imageType) {
       if (!this.gridInited) {
           this.init()
       }
@@ -247,10 +247,22 @@ const antGen = {
               let count = 0;
               for (let y = startY; y < endY; y++) {
                   for (let x = startX; x < endX; x++) {
+                      if (imageType == 'png') {
                       const index = (y * width + x) * 4;
                       rgb.r += imageData[index];
                       rgb.g += imageData[index + 1];
                       rgb.b += imageData[index + 2];
+                      } else if (imageType == 'jpg') {
+                          const index = (y * width + x) * 3;
+                          rgb.r += imageData[index];
+                          rgb.g += imageData[index + 1];
+                          rgb.b += imageData[index + 2];
+                      } else if (imageType == 'bmp') {
+                          const index = (y * width + x) * 3;
+                          rgb.r += imageData[index + 2];
+                          rgb.g += imageData[index + 1];
+                          rgb.b += imageData[index];
+                      }
                       count++;
                   }
               }
