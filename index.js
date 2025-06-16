@@ -262,8 +262,8 @@ const main = {
               }
               let colorIndex = this.convertRGB(rgb);
               this.set({ x: gridX, y: gridY }, colorIndex);
-          }
-      }
+          };
+      };
   }
-}
-export default main
+};
+export default main;
