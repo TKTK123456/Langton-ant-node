@@ -1,6 +1,6 @@
 {
   "name": "langton-ant-rule-gen",
-  "version": "1.0.3-alpha",
+  "version": "1.0.4-alpha",
   "description": "",
   "main": "index.js",
   "type": "module",

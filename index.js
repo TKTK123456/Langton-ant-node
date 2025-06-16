@@ -258,7 +258,7 @@ const antGen = {
                           rgb.g += imageData[index + 1];
                           rgb.b += imageData[index + 2];
                       } else if (imageType == 'bmp') {
-                          const index = (y * width + x) * 3;
+                          const index = (y * width + x) * 4;
                           rgb.r += imageData[index + 2];
                           rgb.g += imageData[index + 1];
                           rgb.b += imageData[index];
