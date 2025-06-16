@@ -1,5 +1,4 @@
-// CODE
-const main = {
+const antGen = {
   scale: 8,
   width: 1366,
   height: 768,
@@ -266,4 +265,4 @@ const main = {
       };
   }
 };
-export default main;
+export default antGen;
