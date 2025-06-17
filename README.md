@@ -12,6 +12,7 @@
 - Generate JSON state machines describing ant movement rules.
 - Handle toroidal shortest path calculations.
 - Compatible with EvolveCode turmite simulator rules format.
+- Possible to turn off looping
 
 ---
 
