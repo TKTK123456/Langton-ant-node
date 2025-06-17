@@ -137,3 +137,4 @@ dist
 .git/**
 .replit
 .upm/**
+test.js
