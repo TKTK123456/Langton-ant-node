@@ -1,14 +1,26 @@
+/** antGen is a utility object designed for generating Langton's Ant rules compatible with the EvolveCode turmite simulator. It provides tools to create grid-based color patterns, convert images to grid colors, and generate turmite JSON rule sets for simulating Langton’s Ant paths */
 const antGen = {
+/** This is to set the scale */
   scale: 8,
+/** This is to set the width of the canvas*/
   width: 1366,
+/** This is to set the height of the canvas*/
   height: 768,
-  gridCols: 171, // You will have to get this yourself from the javascript if you have a different screen size
+    /**This is the amount of grid columns*/
+  gridCols: 171,
+    /**This is the amount of grid rows*/
   gridRows: 96,
+    /**This is the starting position of the ant*/
   startPos: undefined,
+    /**This is the ending position and direction of the ant*/
   endPosDirc: undefined,
+    /**This is if the grid init() function has been called*/
   gridInited: false,
+    /**This is the grid*/
   grid: [],
+    /**This is if the grid is looping*/
   looping: true,
+    /**This is to make sure that the input cordinates are within the grid*/
   checkCords: function({ x, y }) {
       if (!this.gridInited) {
           this.init()
@@ -22,6 +34,7 @@ const antGen = {
       }
       return { x, y };
   },
+    /**This is to get the value of a grid cell*/
   get: function(cords) {
       if (!this.gridInited) {
           this.init()
@@ -29,6 +42,7 @@ const antGen = {
       cords = this.checkCords(cords);
       return this.grid[cords.x][cords.y];
   },
+    /**This is to set the value of a grid cell*/
   set: function(cords, value) {
       if (!this.gridInited) {
           this.init()
@@ -37,15 +51,17 @@ const antGen = {
       this.grid[cords.x][cords.y] = value;
       return value;
   },
+    /**This is the output json for the rules */
   json: {},
+    /**This is the starting state of the ant*/
   startState: 0,
-  // Utility functions for toroidal distance & movement
+    /**This is to get the delta between two points*/
   getDelta: function(p1, p2, size) {
       let delta = (p2 - p1 + size) % size;
       if (delta > size / 2) delta -= size;
       return delta;
   },
-
+    /**This is to get the distance and delta between two points*/
   getDistAndDelta: function(p1, p2) {
       if (!this.gridInited) {
           this.init()
@@ -61,18 +77,13 @@ const antGen = {
           return { dist: Math.abs(dx) + Math.abs(dy), dx, dy };
       }
   },
-
-  // Moves to a location
+    /**This is to set the starting position and direction of the ant after it has finished the grid*/
   setStartLoc: function(x, y, direction = "right") {
       ({ x, y } = this.checkCords({ x, y }));
       if (x === this.endPosDirc[0] && y === this.endPosDirc[1] && direction === this.endPosDirc[2]) return;
       this.endPosDirc = [x, y, direction];
   },
-
-  colorPoint: function(x, y, color) {
-      this.set({ x, y }, color);
-  },
-
+    /**This is to fill an area with a color*/
   fillArea: function(x1, y1, x2, y2, color) {
       if (!this.gridInited) {
           this.init()
@@ -88,7 +99,7 @@ const antGen = {
           this.grid[i].fill(color, y1, y2 + 1);
       }
   },
-
+    /**This is to parse the grid and generate the rules*/
   parseGrid: function() {
       if (!this.gridInited) {
           this.init()
@@ -197,9 +208,7 @@ const antGen = {
 
       addFinalMoves(directions[this.endPosDirc[2]]);
   },
-
-
-  // This function adds a move rule to the json you should use this function (one time or more) after the others;
+    /**This is to add a move rule to the json*/
   addMoveRule: function(state, writeColor, move, nextState) {
       state += this.startState;
       nextState = (nextState !== undefined) ? nextState + this.startState : state;
@@ -210,6 +219,7 @@ const antGen = {
           nextState
       });
   },
+    /**This is to initialize the grid or to reset it*/
   init: function() {
       this.gridCols = Math.ceil(this.width / this.scale);
       this.gridRows = Math.ceil(this.height / this.scale);
@@ -218,7 +228,9 @@ const antGen = {
       this.grid = Array(this.gridCols).fill(null).map(() => Array(this.gridRows).fill(0));
       this.gridInited = true;
   },
+    /**This is all the colors that the grid can use */
   colors: [{ r: 0, g: 0, b: 0 }, { r: 255, g: 255, b: 255 }, { r: 255, g: 0, b: 255 }, { r: 255, g: 255, b: 0 }, { r: 0, g: 255, b: 0 }, { r: 0, g: 255, b: 255 }, { r: 255, g: 0, b: 0 }, { r: 255, g: 165, b: 0 }, { r: 0, g: 0, b: 255 }, { r: 255, g: 105, b: 180 }, { r: 218, g: 112, b: 214 }, { r: 138, g: 43, b: 226 }],
+    /**This is to convert a RGB color to a color number*/
   convertRGB: function(RGB) {
       const colorDistance = (color1, color2) => {
           const { r: r1, g: g1, b: b1 } = color1;
@@ -236,6 +248,7 @@ const antGen = {
       })
       return colorNum;
   },
+    /**This is to convert a hex color to a color number*/
   convertHex: function(hex) {
       const hexToRgb = function(hex) {
           if (hex[0] == '#') {
@@ -247,6 +260,7 @@ const antGen = {
       };
       return convertRGB(hexToRgb(hex))
   },
+    /**This is to convert an image to the grid*/
   convertImage: function(imageData, width, height, colorType = "RGBA") {
       if (!this.gridInited) {
           this.init()
