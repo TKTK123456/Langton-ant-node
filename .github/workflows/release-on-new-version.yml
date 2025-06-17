@@ -7,30 +7,31 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: github.repository_owner == github.actor # avoid running on forks
+    if: github.repository_owner == github.actor  # avoid forks
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # needed to compare versions
+          fetch-depth: 0  # needed for git tags & history
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          registry-url: https://registry.npmjs.org
 
       - name: Get current version
         id: current_version
         run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
 
-      - name: Get previous version from git
+      - name: Get previous version from git tags
         id: previous_version
         run: |
           PREV_VERSION=$(git tag --sort=-creatordate | grep '^v' | head -n 1 | sed 's/^v//')
           echo "version=$PREV_VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Compare versions and tag if changed
+      - name: Compare versions and create tag
         if: steps.current_version.outputs.version != steps.previous_version.outputs.version
         run: |
           VERSION=${{ steps.current_version.outputs.version }}
@@ -44,6 +45,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.current_version.outputs.version }}
-          name: v${{ steps.current_version.outputs.version }}
-          body: |
-            Automated release for version v${{ steps.current_version.outputs.version }}
+          name: Release v${{ steps.current_version.outputs.version }}
+          body: Automated release for version v${{ steps.current_version.outputs.version }}
+
+      - name: Publish to npm
+        if: steps.current_version.outputs.version != steps.previous_version.outputs.version
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
