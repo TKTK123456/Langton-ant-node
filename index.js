@@ -293,7 +293,7 @@ const antGen = {
           };
       };
   },
-    /** Optimized 2-opt TSP solver with fixed start and end points */
+    /** 2-opt TSP solver with fixed start and end points */
     tsp2Opt: function(points, start, end) {
         const dist = (a, b) => this.getDistAndDelta(a, b).dist;
 
@@ -319,15 +319,6 @@ const antGen = {
             path.push(current);
         }
         path.push(end);
-
-        // 2-opt optimization
-        const pathLength = () => {
-            let total = 0;
-            for (let i = 0; i < path.length - 1; i++) {
-                total += dist(path[i], path[i + 1]);
-            }
-            return total;
-        };
 
         let improved = true;
         while (improved) {
