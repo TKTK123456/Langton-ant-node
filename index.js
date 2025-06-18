@@ -106,6 +106,7 @@ const antGen = {
       if (!this.gridInited) {
           this.init()
       }
+      this.json = {};
       let goToPoints = [];
 
       this.grid.forEach((col, x) => {
@@ -304,7 +305,6 @@ const antGen = {
         );
         const path = [start];
         let current = start;
-
         while (middle.length) {
             let bestIdx = -1;
             let bestDist = Infinity;
