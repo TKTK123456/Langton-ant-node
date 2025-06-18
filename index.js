@@ -18,8 +18,10 @@ const antGen = {
   gridInited: false,
     /**This is the grid*/
   grid: [],
-    /**This is if the grid is looping*/
+    /**Looping edges*/
   looping: true,
+     /**Stop after done drawing*/
+    stopAfterDone: true,
     /**This is to make sure that the input cordinates are within the grid*/
   checkCords: function({ x, y }) {
       if (!this.gridInited) {
@@ -104,7 +106,6 @@ const antGen = {
       if (!this.gridInited) {
           this.init()
       }
-      let shortestPath = [];
       let goToPoints = [];
 
       this.grid.forEach((col, x) => {
@@ -113,26 +114,9 @@ const antGen = {
           });
       });
 
-      let path = [{ x: this.startPos[0], y: this.startPos[1] }];
-      let unvisited = goToPoints.slice();
-      if (unvisited.some(e => e.x == this.startPos[0] && e.y == this.startPos[1])) unvisited.splice(unvisited.findIndex(e => e.x == this.startPos[0] && e.y == this.startPos[1]), 1)
-      while (unvisited.length > 0) {
-          let current = path[path.length - 1];
-          let closestIdx = 0;
-          let shortestDist = this.getDistAndDelta(current, unvisited[0]).dist;
-
-          for (let i = 1; i < unvisited.length; i++) {
-              let { dist } = this.getDistAndDelta(current, unvisited[i]);
-              if (dist < shortestDist) {
-                  shortestDist = dist;
-                  closestIdx = i;
-              }
-          }
-          const [nextPoint] = unvisited.splice(closestIdx, 1);
-          path.push(nextPoint);
-      }
-
-      path.push({ x: this.endPosDirc[0], y: this.endPosDirc[1] });
+      let start = { x: this.startPos[0], y: this.startPos[1] };
+      let end = { x: this.endPosDirc[0], y: this.endPosDirc[1] };
+      let path = this.tsp2Opt(goToPoints, start, end);
       // Generate moves same as before
       for (let i = 0; i < path.length - 1; i++) {
           const start = path[i];
@@ -207,6 +191,9 @@ const antGen = {
       };
 
       addFinalMoves(directions[this.endPosDirc[2]]);
+      if (this.stopAfterDone) {
+          this.json[this.startState-1][0].nextState = -1;
+      }
   },
     /**This is to add a move rule to the json*/
   addMoveRule: function(state, writeColor, move, nextState) {
@@ -305,6 +292,65 @@ const antGen = {
               this.set({ x: gridX, y: gridY }, colorIndex);
           };
       };
-  }
+  },
+    /** Optimized 2-opt TSP solver with fixed start and end points */
+    tsp2Opt: function(points, start, end) {
+        const dist = (a, b) => this.getDistAndDelta(a, b).dist;
+
+        // Initial greedy path from start to end
+        const middle = points.filter(p =>
+            !(p.x === start.x && p.y === start.y) &&
+            !(p.x === end.x && p.y === end.y)
+        );
+        const path = [start];
+        let current = start;
+
+        while (middle.length) {
+            let bestIdx = -1;
+            let bestDist = Infinity;
+            for (let i = 0; i < middle.length; i++) {
+                const d = dist(current, middle[i]);
+                if (d < bestDist) {
+                    bestDist = d;
+                    bestIdx = i;
+                }
+            }
+            current = middle.splice(bestIdx, 1)[0];
+            path.push(current);
+        }
+        path.push(end);
+
+        // 2-opt optimization
+        const pathLength = () => {
+            let total = 0;
+            for (let i = 0; i < path.length - 1; i++) {
+                total += dist(path[i], path[i + 1]);
+            }
+            return total;
+        };
+
+        let improved = true;
+        while (improved) {
+            improved = false;
+            outer: for (let i = 1; i < path.length - 2; i++) {
+                for (let k = i + 1; k < path.length - 1; k++) {
+                    const a = path[i - 1], b = path[i];
+                    const c = path[k], d = path[k + 1];
+                    const before = dist(a, b) + dist(c, d);
+                    const after = dist(a, c) + dist(b, d);
+                    if (after < before) {
+                        // Reverse the middle segment
+                        for (let left = i, right = k; left < right; left++, right--) {
+                            [path[left], path[right]] = [path[right], path[left]];
+                        }
+                        improved = true;
+                        break outer;
+                    }
+                }
+            }
+        }
+
+        return path;
+    }
 };
 export default antGen;
