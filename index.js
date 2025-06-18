@@ -260,7 +260,6 @@ const antGen = {
               let endX = Math.min(Math.floor((gridX + 1) * scaleW), width);
               let startY = Math.floor(gridY * scaleH);
               let endY = Math.min(Math.floor((gridY + 1) * scaleH), height);
-              console.log(startX, endX, startY, endY)
               let rgb = { r: 0, g: 0, b: 0 };
               let count = 0;
               for (let y = startY; y < endY; y++) {
