@@ -102,11 +102,11 @@ const antGen = {
       }
   },
     /**This is to parse the grid and generate the rules*/
-  parseGrid: function() {
+  parseGrid: function(resetJson = true) {
       if (!this.gridInited) {
           this.init()
       }
-      this.json = {};
+      if (resetJson) this.json = {};
       let goToPoints = [];
 
       this.grid.forEach((col, x) => {
