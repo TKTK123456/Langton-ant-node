@@ -21,7 +21,7 @@ const antGen = {
     /**Looping edges*/
   looping: true,
      /**Stop after done drawing*/
-    stopAfterDone: true,
+  stopAfterDone: false,
     /**This is to make sure that the input cordinates are within the grid*/
   checkCords: function({ x, y }) {
       if (!this.gridInited) {
@@ -106,7 +106,10 @@ const antGen = {
       if (!this.gridInited) {
           this.init()
       }
-      if (resetJson) this.json = {};
+      if (resetJson) {
+          this.json = {};
+          this.startState = 0;
+      };
       let goToPoints = [];
 
       this.grid.forEach((col, x) => {
