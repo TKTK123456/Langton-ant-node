@@ -14,34 +14,27 @@ if (args[0] == '--quick') {
     
     async function customCalibration(testSizes = [5, 10, 15, 20, 30, 50, 75, 100, 150, 200, 300, 500]) {
         console.log('Running custom calibration...\n');
-        
-        for (const size of testSizes) {
-            await calibrator.runCalibrationTest(size, 2); // 2 iterations for speed
-            await new Promise(resolve => setTimeout(resolve, 50));
-        }
-        
-        calibrator.calculateOptimalConstants();
-        calibrator.generateReport();
-        
+        await calibrator.runCalibration(false, testSizes);
         console.log('\n=== OPTIMIZED FUNCTION ===');
         console.log(calibrator.generateOptimizedFunction());
     }
     // Check if test sizes are provided as argument and are vailid array of numbers
     if (args[1] && Array.isArray(JSON.parse(args[1]))) {
     customCalibration(JSON.parse(args[1]));
-    } else {
-        customCalibration();
-    }
+    } else customCalibration();
 } else if (args[0] == '--auto') {
     const autoCalibrator = new AutoCalibrator();
     autoCalibrator.createBackup();
-    autoCalibrator.calibrateAndUpdate();
+    if (args[1] && Array.isArray(JSON.parse(args[1]))) {
+        autoCalibrator.calibrateAndUpdate(JSON.parse(args[1]));
+    } else autoCalibrator.calibrateAndUpdate();
 } else {
     console.log('Usage:');
     console.log('  calibrate --quick     # Run quick calibration');
     console.log('  calibrate --custom    # Run comprehensive calibration');
     console.log('  calibrate --custom [array]    # Run custom calibration with specific test sizes');
     console.log('  calibrate --auto    # Automatically calibrate and update index.js');
+    console.log('  calibrate --auto [array]    # Automatically calibrate and update index.js with specific test sizes');
     console.log('\nThis will measure actual TSP performance on your system');
     console.log('and suggest optimized constants for the estimateTsp2OptTime function.');
 }

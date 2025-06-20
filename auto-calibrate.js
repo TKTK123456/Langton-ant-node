@@ -18,11 +18,11 @@ class AutoCalibrator {
     /**
      * Run calibration and update the index.js file
      */
-    async calibrateAndUpdate() {
+    async calibrateAndUpdate(testSizes = [10, 25, 50, 75, 100, 150, 200, 300]) {
         console.log('Starting automatic calibration and update...\n');
 
         // Run calibration
-        await this.calibrator.runCalibration();
+        await this.calibrator.runCalibration(true, testSizes);
 
         if (!this.calibrator.optimizedConstants) {
             console.error('Calibration failed - no optimized constants generated');

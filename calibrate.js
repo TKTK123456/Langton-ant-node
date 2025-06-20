@@ -70,11 +70,8 @@ class TspCalibrator {
     /**
      * Run full calibration suite
      */
-    async runCalibration() {
-        console.log('Starting TSP calibration...\n');
-        
-        const testSizes = [10, 25, 50, 75, 100, 150, 200, 300];
-        
+    async runCalibration(defaultMessage = true, testSizes = [10, 25, 50, 75, 100, 150, 200, 300]) {
+        if (defaultMessage) console.log('Starting TSP calibration...\n');
         for (const size of testSizes) {
             await this.runCalibrationTest(size);
             // Small delay to prevent overwhelming the system
