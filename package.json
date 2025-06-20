@@ -1,12 +1,12 @@
 {
   "name": "langton-ant-rule-gen",
-  "version": "1.1.15",
+  "version": "1.1.16",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "test": "echo 'hi'",
-    "auto-calibrate": "node auto-calibrate.js",
+    "auto-calibrate": "node run-calibrate.js --auto",
     "quick-calibrate": "node run-calibrate.js --quick",
     "custom-calibrate": "node run-calibrate.js --custom"
   },
@@ -15,5 +15,8 @@
   "license": "MIT",
   "dependencies": {
     "@types/node": "^22.13.11"
+  },
+  "bin": {
+    "calibrate": "./run-calibrate.js"
   }
 }

@@ -1,4 +1,4 @@
-
+#!/usr/bin/env node
 import antGen from './index.js';
 
 /**
