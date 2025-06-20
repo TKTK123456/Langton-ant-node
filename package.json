@@ -11,7 +11,7 @@
     "custom-calibrate": "node run-calibrate.js --custom"
   },
   "keywords": [],
-  "author": "",
+  "author": "TKTK1234567",
   "license": "MIT",
   "dependencies": {
     "@types/node": "^22.13.11"
