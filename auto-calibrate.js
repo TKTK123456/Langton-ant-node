@@ -94,7 +94,8 @@ class AutoCalibrator {
             const indexPath = join(__dirname, 'index.js');
             const content = fs.readFileSync(indexPath, 'utf8');
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            fs.writeFileSync(`index.js.backup.${timestamp}`, content, 'utf8');
+            const backupPath = join(__dirname, `index.js.backup.${timestamp}`)
+            fs.writeFileSync(backupPath, content, 'utf8');
             console.log(`Backup created: index.js.backup.${timestamp}`);
         } catch (error) {
             console.error('Warning: Could not create backup:', error.message);
