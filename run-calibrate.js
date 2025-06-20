@@ -38,9 +38,10 @@ if (args[0] == '--quick') {
     autoCalibrator.calibrateAndUpdate();
 } else {
     console.log('Usage:');
-    console.log('  node test-calibration.js --quick     # Run quick calibration');
-    console.log('  node test-calibration.js --custom    # Run comprehensive calibration');
-    console.log('  node test-calibration.js --auto    # Automatically calibrate and update index.js');
+    console.log('  calibrate --quick     # Run quick calibration');
+    console.log('  calibrate --custom    # Run comprehensive calibration');
+    console.log('  calibrate --custom [array]    # Run custom calibration with specific test sizes');
+    console.log('  calibrate --auto    # Automatically calibrate and update index.js');
     console.log('\nThis will measure actual TSP performance on your system');
     console.log('and suggest optimized constants for the estimateTsp2OptTime function.');
 }
