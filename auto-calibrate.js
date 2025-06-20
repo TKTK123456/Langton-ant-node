@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 import fs from 'fs';
 import { TspCalibrator } from './calibrate.js';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Automatically calibrate and update the estimateTsp2OptTime function
@@ -15,10 +20,10 @@ class AutoCalibrator {
      */
     async calibrateAndUpdate() {
         console.log('Starting automatic calibration and update...\n');
-        
+
         // Run calibration
         await this.calibrator.runCalibration();
-        
+
         if (!this.calibrator.optimizedConstants) {
             console.error('Calibration failed - no optimized constants generated');
             return false;
@@ -33,11 +38,11 @@ class AutoCalibrator {
      */
     updateIndexFile() {
         try {
-            const indexPath = 'index.js';
+            const indexPath = join(__dirname, 'index.js');
             let content = fs.readFileSync(indexPath, 'utf8');
-            
+
             const { greedyConstant, twoOptConstant } = this.calibrator.optimizedConstants;
-            
+
             // Create the new function implementation
             const newFunction = `    /** Estimate tsp2Opt runtime based on number of points */
     estimateTsp2OptTime: function(numPoints) {
@@ -58,23 +63,23 @@ class AutoCalibrator {
 
             // Find and replace the existing function
             const functionRegex = /\/\*\* Estimate tsp2Opt runtime[\s\S]*?estimatedMs:[\s\S]*?};[\s\S]*?}/;
-            
+
             if (functionRegex.test(content)) {
                 content = content.replace(functionRegex, newFunction);
-                
+
                 // Write back to file
                 fs.writeFileSync(indexPath, content, 'utf8');
-                
+
                 console.log('\n✅ Successfully updated index.js with calibrated constants!');
                 console.log(`Greedy constant: ${greedyConstant.toExponential(4)}`);
                 console.log(`2-opt constant: ${twoOptConstant.toExponential(4)}`);
-                
+
                 return true;
             } else {
                 console.error('❌ Could not find estimateTsp2OptTime function in index.js');
                 return false;
             }
-            
+
         } catch (error) {
             console.error('❌ Error updating index.js:', error.message);
             return false;
@@ -86,7 +91,8 @@ class AutoCalibrator {
      */
     createBackup() {
         try {
-            const content = fs.readFileSync('index.js', 'utf8');
+            const indexPath = join(__dirname, 'index.js');
+            const content = fs.readFileSync(indexPath, 'utf8');
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             fs.writeFileSync(`index.js.backup.${timestamp}`, content, 'utf8');
             console.log(`Backup created: index.js.backup.${timestamp}`);
@@ -99,13 +105,13 @@ class AutoCalibrator {
 // Main execution
 async function main() {
     const autoCalibrator = new AutoCalibrator();
-    
+
     // Create backup first
     autoCalibrator.createBackup();
-    
+
     // Run calibration and update
     const success = await autoCalibrator.calibrateAndUpdate();
-    
+
     if (success) {
         console.log('\n🎉 Auto-calibration complete!');
         console.log('Your estimateTsp2OptTime function has been optimized for this system.');
