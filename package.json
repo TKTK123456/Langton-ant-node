@@ -1,11 +1,14 @@
 {
   "name": "langton-ant-rule-gen",
-  "version": "1.1.14",
+  "version": "1.1.15",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo 'hi'"
+    "test": "echo 'hi'",
+    "auto-calibrate": "node auto-calibrate.js",
+    "quick-calibrate": "node run-calibrate.js --quick",
+    "custom-calibrate": "node run-calibrate.js --custom"
   },
   "keywords": [],
   "author": "",
