@@ -298,9 +298,12 @@ const antGen = {
       };
   },
     /** 2-opt TSP solver with fixed start and end points */
-    tsp2Opt: function(points, start, end) {
+    tsp2Opt: function(points, start, end, calibrate = false) {
+        let calInfo = {}
+        if (calibrate) {
+            calInfo.startTime = performance.now()
+        }
         const dist = (a, b) => this.getDistAndDelta(a, b).dist;
-
         // Initial greedy path from start to end
         const middle = points.filter(p =>
             !(p.x === start.x && p.y === start.y) &&
@@ -322,7 +325,9 @@ const antGen = {
             path.push(current);
         }
         path.push(end);
-
+        if (calibrate) {
+            calInfo.greedyTime = performance.now() - calInfo.startTime
+        }
         let improved = true;
         while (improved) {
             improved = false;
@@ -343,7 +348,11 @@ const antGen = {
                 }
             }
         }
-
+        if (calibrate) {
+            calInfo.twoOptTime = performance.now() - calInfo.startTime - calInfo.greedyTime
+            calInfo.totalTime = performance.now() - calInfo.startTime
+            return {path, calInfo}
+        }
         return path;
     },
     /** Estimate tsp2Opt runtime based on number of points */

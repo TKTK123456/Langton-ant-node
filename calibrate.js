@@ -1,16 +1,15 @@
 #!/usr/bin/env node
 import antGen from './index.js';
-
 /**
  * Calibration system for estimateTsp2OptTime function
  * Measures actual performance and suggests timing constants
  */
 class TspCalibrator {
-    constructor() {
+    constructor(greedyConstant = 0.0001,twoOptConstant= 0.00001) {
         this.results = [];
         this.baselineConstants = {
-            greedyConstant: 0.0001,
-            twoOptConstant: 0.00001
+            greedyConstant,
+            twoOptConstant
         };
     }
 
@@ -35,7 +34,8 @@ class TspCalibrator {
         console.log(`Testing with ${numPoints} points...`);
         
         const times = [];
-        
+        const greadyTimes = [];
+        const twoOptTimes = [];
         for (let i = 0; i < iterations; i++) {
             // Setup antGen for testing
             antGen.gridCols = 100;
@@ -47,18 +47,23 @@ class TspCalibrator {
             const end = { x: 99, y: 99 };
             
             // Measure actual performance
-            const startTime = performance.now();
-            antGen.tsp2Opt(points, start, end);
-            const endTime = performance.now();
-            
-            times.push(endTime - startTime);
+            const allInfo = antGen.tsp2Opt(points, start, end, true);
+            const {path, calInfo} = allInfo;
+            const {greedyTime, twoOptTime, totalTime} = calInfo;
+            times.push(totalTime);
+            greadyTimes.push(greedyTime);
+            twoOptTimes.push(twoOptTime);
         }
         
         const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
+        const avgGreedyTime = greadyTimes.reduce((a, b) => a + b, 0) / greadyTimes.length;
+        const avgTwoOptTime = twoOptTimes.reduce((a, b) => a + b, 0) / twoOptTimes.length;
         const result = {
             numPoints,
             actualTime: avgTime,
-            estimatedTime: antGen.estimateTsp2OptTime(numPoints).estimatedMs
+            estimatedTime: antGen.estimateTsp2OptTime(numPoints).estimatedMs,
+            greedyTime: avgGreedyTime,
+            twoOptTime: avgTwoOptTime
         };
         
         this.results.push(result);
@@ -87,8 +92,6 @@ class TspCalibrator {
      */
     calculateOptimalConstants() {
         if (this.results.length === 0) return;
-        
-        // Use least squares regression to find optimal constants
         let sumActualGreedy = 0;
         let sumEstimatedGreedy = 0;
         let sumActualTwoOpt = 0;
@@ -98,19 +101,17 @@ class TspCalibrator {
         for (const result of this.results) {
             const n = result.numPoints;
             const actualTime = result.actualTime;
-            
-            // Estimate greedy component (simpler, linear relationship)
+            const greedyTime = result.greedyTime;
+            const twoOptTime = result.twoOptTime;
             const greedyComponent = n * n * this.baselineConstants.greedyConstant;
             const twoOptComponent = actualTime - greedyComponent;
             
-            sumActualGreedy += actualTime * 0.1; // Assume 10% is greedy
+            sumActualGreedy += greedyTime;
             sumEstimatedGreedy += greedyComponent;
-            sumActualTwoOpt += actualTime * 0.9; // Assume 90% is 2-opt
+            sumActualTwoOpt += twoOptTime;
             sumEstimatedTwoOpt += n * n * Math.min(n, 50) * this.baselineConstants.twoOptConstant;
             count++;
         }
-        
-        // Calculate scaling factors
         const greedyScale = count > 0 ? sumActualGreedy / sumEstimatedGreedy : 1;
         const twoOptScale = count > 0 ? sumActualTwoOpt / sumEstimatedTwoOpt : 1;
         
