@@ -55,31 +55,13 @@ class AutoCalibrator {
             let content = fs.readFileSync(indexPath, 'utf8');
 
             const { greedyConstant, twoOptConstant } = this.calibrator.optimizedConstants;
-
-            // Create the new function implementation
-            const newFunction = `    /** Estimate tsp2Opt runtime based on number of points */
-    estimateTsp2OptTime: function(numPoints) {
-        // Calibrated constants for this system (auto-generated)
-        const greedyTime = numPoints * numPoints * ${greedyConstant.toExponential(4)};
-        const iterations = Math.min(numPoints, 50);
-        const twoOptTime = numPoints * numPoints * iterations * ${twoOptConstant.toExponential(4)};
-        const totalTime = greedyTime + twoOptTime;
-
-        return {
-            estimatedMs: Math.round(totalTime * 100) / 100,
-            greedyMs: Math.round(greedyTime * 100) / 100,
-            twoOptMs: Math.round(twoOptTime * 100) / 100,
-            iterations: iterations,
-            complexity: numPoints < 100 ? 'Low' : numPoints < 500 ? 'Medium' : 'High'
-        };
-    }`;
-
-            // Find and replace the existing function
             const functionRegex = /\/\*\* Estimate tsp2Opt runtime[\s\S]*?estimatedMs:[\s\S]*?};[\s\S]*?}/;
-
+            let newFunction = content.match(functionRegex)[0];
+            newFunction = newFunction.replace(/greedyTime \= numPoints \* numPoints \* [0-9]*\.[0-9]*e?-?[0-9]*/g, `greedyTime = numPoints * numPoints * ${greedyConstant.toExponential(4)}`);
+            newFunction = newFunction.replace(/twoOptTime \= numPoints \* numPoints \* iterations \* [0-9]*\.[0-9]*e?-?[0-9]*/g, `twoOptTime = numPoints * numPoints * iterations * ${twoOptConstant.toExponential(4)}`);
             if (functionRegex.test(content)) {
                 content = content.replace(functionRegex, newFunction);
-
+                
                 // Write back to file
                 if (!this.calibrator.debug) {
                     fs.writeFileSync(indexPath, content, 'utf8');
@@ -88,7 +70,6 @@ class AutoCalibrator {
                     console.log(`Greedy constant: ${greedyConstant.toExponential(4)}`);
                     console.log(`2-opt constant: ${twoOptConstant.toExponential(4)}`);
                 } else {
-                    this.calibrator.generateReport();
                     console.log('\n=== UPDATED FUNCTION ===');
                     console.log(newFunction);
                 }

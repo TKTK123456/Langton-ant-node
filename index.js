@@ -357,11 +357,9 @@ const antGen = {
     },
     /** Estimate tsp2Opt runtime based on number of points */
     estimateTsp2OptTime: function(numPoints) {
-        // Based on O(n²) for greedy + O(n²) per 2-opt iteration
-        // Empirical constants derived from typical performance
-        const greedyTime = numPoints * numPoints * 0.0001; // ms
-        const iterations = Math.min(numPoints, 50); // Typical iteration count
-        const twoOptTime = numPoints * numPoints * iterations * 0.00001; // ms
+        const greedyTime = numPoints * numPoints * 0.0001;
+        const iterations = Math.min(numPoints, 50);
+        const twoOptTime = numPoints * numPoints * iterations * 0.00001;
         const totalTime = greedyTime + twoOptTime;
 
         return {

@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 import antGen from './index.js';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 /**
  * Calibration system for estimateTsp2OptTime function
  * Measures actual performance and suggests timing constants
@@ -167,30 +173,18 @@ class TspCalibrator {
      * Generate optimized estimateTsp2OptTime function
      */
     generateOptimizedFunction() {
+        const indexPath = join(__dirname, 'index.js');
+        let content = fs.readFileSync(indexPath, 'utf8');
         if (!this.optimizedConstants) {
             console.log('Run calibration first!');
             return;
         }
         
         const { greedyConstant, twoOptConstant } = this.optimizedConstants;
-        
-        return `
-    /** Estimate tsp2Opt runtime based on number of points (calibrated) */
-    estimateTsp2OptTime: function(numPoints) {
-        // Calibrated constants for this system
-        const greedyTime = numPoints * numPoints * ${greedyConstant.toExponential(4)};
-        const iterations = Math.min(numPoints, 50);
-        const twoOptTime = numPoints * numPoints * iterations * ${twoOptConstant.toExponential(4)};
-        const totalTime = greedyTime + twoOptTime;
-
-        return {
-            estimatedMs: Math.round(totalTime * 100) / 100,
-            greedyMs: Math.round(greedyTime * 100) / 100,
-            twoOptMs: Math.round(twoOptTime * 100) / 100,
-            iterations: iterations,
-            complexity: numPoints < 100 ? 'Low' : numPoints < 500 ? 'Medium' : 'High'
-        };
-    }`;
+        let newFunction = content.match(/\/\*\* Estimate tsp2Opt runtime[\s\S]*?estimatedMs:[\s\S]*?};[\s\S]*?}/)[0];
+        newFunction = newFunction.replace(/greedyTime \= numPoints \* numPoints \* [0-9]*\.[0-9]*e?-?[0-9]*/g, `greedyTime = numPoints * numPoints * ${greedyConstant.toExponential(4)}`);
+        newFunction = newFunction.replace(/twoOptTime \= numPoints \* numPoints \* iterations \* [0-9]*\.[0-9]*e?-?[0-9]*/g, `twoOptTime = numPoints * numPoints * iterations * ${twoOptConstant.toExponential(4)}`);
+        return newFunction;
     }
 }
 

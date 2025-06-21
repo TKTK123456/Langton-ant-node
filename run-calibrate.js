@@ -19,13 +19,19 @@ if (args.includes('--quick')) {
 } else if (args.includes('--custom')) {
     calInputs.type = "custom";
     let testSizeIndex = args.indexOf('--custom') + 1;
-    if (testSizeIndex < args.length && Array.isArray(JSON.parse(args[testSizeIndex]))) {
+    if (args[testSizeIndex]==='--debug') {
+        testSizeIndex = -1;
+    }
+    if (testSizeIndex < args.length && testSizeIndex > -1 && Array.isArray(JSON.parse(args[testSizeIndex]))) {
         calInputs.testSizes = JSON.parse(args[testSizeIndex]);
     }
 } else if (args.includes('--auto')) {
     calInputs.type = "auto";
     let testSizeIndex = args.indexOf('--auto') + 1;
-    if (testSizeIndex < args.length && Array.isArray(JSON.parse(args[testSizeIndex]))) {
+    if (args[testSizeIndex]==='--debug') {
+        testSizeIndex = -1;
+    }
+    if (testSizeIndex < args.length && testSizeIndex > -1 && Array.isArray(JSON.parse(args[testSizeIndex]))) {
         calInputs.testSizes = JSON.parse(args[testSizeIndex]);
     }
     if (calInputs.debug) {
