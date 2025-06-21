@@ -6,21 +6,34 @@ import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
 /**
  * Automatically calibrate and update the estimateTsp2OptTime function
  */
 class AutoCalibrator {
-    constructor() {
-        this.calibrator = new TspCalibrator();
+    constructor(debug = false) {
+        this.calibrator = new TspCalibrator(debug);
     }
-
     /**
      * Run calibration and update the index.js file
      */
     async calibrateAndUpdate(testSizes = [10, 25, 50, 75, 100, 150, 200, 300]) {
         console.log('Starting automatic calibration and update...\n');
-
+        async function currentIndexConstants() {
+            try {
+                const indexPath = join(__dirname, 'index.js');
+                const content = fs.readFileSync(indexPath, 'utf8');
+                //console.log(content)
+                let greedyConstant = content.match(/greedyTime \= numPoints \* numPoints \* [0-9]*\.[0-9]*e?-?[0-9]*/g)[0];
+                let twoOptConstant = content.match(/twoOptTime \= numPoints \* numPoints \* iterations \* [0-9]*\.[0-9]*e?-?[0-9]*/g)[0];
+                greedyConstant = greedyConstant.split('* ')[2];
+                twoOptConstant = twoOptConstant.split('* ')[3];
+                return { greedyConstant: parseFloat(greedyConstant), twoOptConstant: parseFloat(twoOptConstant) };
+            } catch (error) {
+                console.error('Error reading index.js:', error.message);
+            }
+        };
+        const { greedyConstant, twoOptConstant } = await currentIndexConstants();
+        this.calibrator.baselineConstants = { greedyConstant, twoOptConstant };
         // Run calibration
         await this.calibrator.runCalibration(true, testSizes);
 
@@ -68,12 +81,17 @@ class AutoCalibrator {
                 content = content.replace(functionRegex, newFunction);
 
                 // Write back to file
-                fs.writeFileSync(indexPath, content, 'utf8');
+                if (!this.calibrator.debug) {
+                    fs.writeFileSync(indexPath, content, 'utf8');
 
-                console.log('\n✅ Successfully updated index.js with calibrated constants!');
-                console.log(`Greedy constant: ${greedyConstant.toExponential(4)}`);
-                console.log(`2-opt constant: ${twoOptConstant.toExponential(4)}`);
-
+                    console.log('\n✅ Successfully updated index.js with calibrated constants!');
+                    console.log(`Greedy constant: ${greedyConstant.toExponential(4)}`);
+                    console.log(`2-opt constant: ${twoOptConstant.toExponential(4)}`);
+                } else {
+                    this.calibrator.generateReport();
+                    console.log('\n=== UPDATED FUNCTION ===');
+                    console.log(newFunction);
+                }
                 return true;
             } else {
                 console.error('❌ Could not find estimateTsp2OptTime function in index.js');
@@ -95,7 +113,7 @@ class AutoCalibrator {
             const content = fs.readFileSync(indexPath, 'utf8');
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const backupPath = join(__dirname, `index.js.backup.${timestamp}`)
-            fs.writeFileSync(backupPath, content, 'utf8');
+            if (!this.calibrator.debug) fs.writeFileSync(backupPath, content, 'utf8');
             console.log(`Backup created: index.js.backup.${timestamp}`);
         } catch (error) {
             console.error('Warning: Could not create backup:', error.message);

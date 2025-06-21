@@ -5,12 +5,13 @@ import antGen from './index.js';
  * Measures actual performance and suggests timing constants
  */
 class TspCalibrator {
-    constructor(greedyConstant = 0.0001,twoOptConstant= 0.00001) {
+    constructor(debug = false, greedyConstant = 0.0001,twoOptConstant= 0.00001) {
         this.results = [];
         this.baselineConstants = {
             greedyConstant,
             twoOptConstant
         };
+        this.debug = debug;
     }
 
     /**
@@ -53,6 +54,7 @@ class TspCalibrator {
             times.push(totalTime);
             greadyTimes.push(greedyTime);
             twoOptTimes.push(twoOptTime);
+            if (this.debug) console.log(`  Iteration ${i + 1}: ${totalTime.toFixed(2)}ms`);
         }
         
         const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
@@ -193,8 +195,8 @@ class TspCalibrator {
 }
 
 // Example usage and quick test
-async function quickCalibration() {
-    const calibrator = new TspCalibrator();
+async function quickCalibration(debug = false) {
+    const calibrator = new TspCalibrator(debug);
     
     console.log('Running quick calibration (this may take a moment)...\n');
     await calibrator.runCalibration();
