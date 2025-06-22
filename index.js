@@ -71,7 +71,7 @@ const antGen = {
       if (this.looping) {
       const dx = this.getDelta(p1.x, p2.x, this.gridCols);
       const dy = this.getDelta(p1.y, p2.y, this.gridRows);
-          
+
       return { dist: Math.abs(dx) + Math.abs(dy), dx, dy };
       } else {
           const dx = p2.x - p1.x;
@@ -309,7 +309,7 @@ const antGen = {
             !(p.x === start.x && p.y === start.y) &&
             !(p.x === end.x && p.y === end.y)
         );
-        const path = [start];
+        let path = [start];
         let current = start;
         while (middle.length) {
             let bestIdx = -1;
@@ -336,9 +336,10 @@ const antGen = {
                     let pathXY = this.getPath(p[i], p[i+1]).pathXY;
                     fullPath.push(pathXY);
                 }
+                return fullPath;
             };
             detailInfo.currentFullPath = detailInfo.getFullPath(path);
-            detailInfo.currentPath = path
+            detailInfo.currentPath = path;
         }
         let improved = true;
         while (improved) {
@@ -365,8 +366,8 @@ const antGen = {
                                 path = detailInfo.currentPath;
                             }
                         } else {
-                        improved = true;
-                        break outer;
+                            improved = true;
+                            break outer;
                         }
                     }
                 }
