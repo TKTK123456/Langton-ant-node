@@ -25,9 +25,9 @@ class AutoCalibrator {
                 //console.log(content)
                 let greedyConstant = content.match(/greedyConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g)[0];
                 let twoOptConstant = content.match(/twoOptConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g)[0];
-                greedyConstant = greedyConstant.split('* ')[2];
-                twoOptConstant = twoOptConstant.split('* ')[3];
-                return { greedyConstant: parseFloat(greedyConstant), twoOptConstant: parseFloat(twoOptConstant) };
+                greedyConstant = greedyConstant.split('=')[1].trim();
+                twoOptConstant = twoOptConstant.split('=')[1].trim();
+                return { greedyConstant: greedyConstant, twoOptConstant: twoOptConstant };
             } catch (error) {
                 console.error('Error reading index.js:', error.message);
             }
@@ -57,8 +57,8 @@ class AutoCalibrator {
             const { greedyConstant, twoOptConstant } = this.calibrator.optimizedConstants;
             const functionRegex = /\/\*\* Estimate tsp2Opt runtime[\s\S]*?estimatedMs:[\s\S]*?};[\s\S]*?}/;
             let newFunction = content.match(functionRegex)[0];
-            newFunction = newFunction.replace(/greedyConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g, `greedyTime = numPoints * numPoints * ${greedyConstant.toExponential(4)}`);
-            newFunction = newFunction.replace(/twoOptConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g, `twoOptTime = numPoints * numPoints * iterations * ${twoOptConstant.toExponential(4)}`);
+            newFunction = newFunction.replace(/greedyConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g, `greedyConstant = numPoints * numPoints * ${greedyConstant.toExponential(4)}`);
+            newFunction = newFunction.replace(/twoOptConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g, `twoOptConstant = numPoints * numPoints * iterations * ${twoOptConstant.toExponential(4)}`);
             if (functionRegex.test(content)) {
                 content = content.replace(functionRegex, newFunction);
                 

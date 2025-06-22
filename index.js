@@ -102,7 +102,7 @@ const antGen = {
       }
   },
     /**This is to parse the grid and generate the rules*/
-  parseGrid: function(resetJson = true) {
+  parseGrid: function(resetJson = true, detailTsp = false) {
       if (!this.gridInited) {
           this.init()
       }
@@ -120,7 +120,7 @@ const antGen = {
 
       let start = { x: this.startPos[0], y: this.startPos[1] };
       let end = { x: this.endPosDirc[0], y: this.endPosDirc[1] };
-      let path = this.tsp2Opt(goToPoints, start, end);
+      let path = this.tsp2Opt(goToPoints, start, end, false, detailTsp);
       // Generate moves same as before
       for (let i = 0; i < path.length - 1; i++) {
           const start = path[i];
@@ -298,7 +298,7 @@ const antGen = {
       };
   },
     /** 2-opt TSP solver with fixed start and end points */
-    tsp2Opt: function(points, start, end, calibrate = false) {
+    tsp2Opt: function(points, start, end, calibrate = false, detailed = false) {
         let calInfo = {}
         if (calibrate) {
             calInfo.startTime = performance.now()
@@ -328,6 +328,18 @@ const antGen = {
         if (calibrate) {
             calInfo.greedyTime = performance.now() - calInfo.startTime
         }
+        const detailInfo = {}
+        if (detailed) {
+            detailInfo.getFullPath = (p) => {
+                let fullPath = []
+                for (let i = 0; i < p.length-1; i++) {
+                    let pathXY = this.getPath(p[i], p[i+1]).pathXY;
+                    fullPath.push(pathXY);
+                }
+            };
+            detailInfo.currentFullPath = detailInfo.getFullPath(path);
+            detailInfo.currentPath = path
+        }
         let improved = true;
         while (improved) {
             improved = false;
@@ -342,8 +354,20 @@ const antGen = {
                         for (let left = i, right = k; left < right; left++, right--) {
                             [path[left], path[right]] = [path[right], path[left]];
                         }
+                        if (detailed) {
+                            detailInfo.newFullPath = detailInfo.getFullPath(path);
+                            if (detailInfo.newFullPath.length < detailInfo.currentFullPath.length) {
+                                detailInfo.currentFullPath = detailInfo.newFullPath;
+                                detailInfo.currentPath = path;
+                                improved = true;
+                                break outer;
+                            } else {
+                                path = detailInfo.currentPath;
+                            }
+                        } else {
                         improved = true;
                         break outer;
+                        }
                     }
                 }
             }
@@ -357,8 +381,8 @@ const antGen = {
     },
     /** Estimate tsp2Opt runtime based on number of points */
     estimateTsp2OptTime: function(numPoints, gridCols = this.gridCols, gridRows = this.gridRows ) {
-        const greedyConstant = 0.0001;
-        const twoOptConstant = 0.00001;
+        let greedyConstant = 0.0001;
+        let twoOptConstant = 0.00001;
         const greedyTime = numPoints * numPoints * greedyConstant;
         const iterations = Math.min(numPoints, 50);
         const twoOptTime = numPoints * numPoints * iterations * twoOptConstant;
@@ -370,6 +394,57 @@ const antGen = {
             iterations: iterations,
             complexity: numPoints < 100 ? 'Low' : numPoints < 500 ? 'Medium' : 'High'
         };
+    },
+    /**Get path from one cordinate to another*/
+    getPath: function(start, end, startState = this.startState) {
+        const { dx, dy } = this.getDistAndDelta(start, end);
+        let x = start.x;
+        let y = start.y;
+        let pathDir = [];
+        let pathXY = [];
+        let currentState = startState
+        // Move in x direction first
+        for (let step = 0; step < Math.abs(dx); step++) {
+            const color = this.get({ x, y }); // Get color BEFORE move
+            const state = startState;
+            startState++;
+            pathDir.push({
+                state,
+                color,
+                move: dx > 0 ? ">" : "<",
+                nextState: startState
+            });
+            pathXY.push({x,y});
+            x = (x + (dx > 0 ? 1 : -1) + this.gridCols) % this.gridCols;
+        }
+        // Move in y direction
+        for (let step = 0; step < Math.abs(dy); step++) {
+            const color = this.get({
+                x,
+                y
+            });
+            const state = startState;
+            startState++;
+            pathDir.push({
+                state,
+                color,
+                move: dy > 0 ? "v" : "^",
+                nextState: startState
+            });
+            pathXY.push({x,y});
+            y = (y + (dy > 0 ? 1 : -1) + this.gridRows) % this.gridRows;
+        }
+        const addToJson = (pathDir) => {
+            for (let i = 0; i < startState-currentState; i++) {
+                this.json[pathDir[i].state] = [{
+                    writeColor: pathDir[i].color,
+                    move: pathDir[i].move,
+                    nextState: pathDir[i].nextState
+                }]
+                this.startState = pathDir[i].nextState
+            }
+        }
+        return {pathDir, pathXY, addToJson, newStartState: startState}
     }
 };
 export default antGen;

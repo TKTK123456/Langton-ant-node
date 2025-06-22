@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import antGen from './index.js';
-import { getRandomPoint } from './utility.js'
+import { getRandomPoint, getRandom } from './utility.js'
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -26,8 +26,19 @@ class TspCalibrator {
      */
     generateTestPoints(numPoints, gridCols = 100, gridRows = 100) {
         const points = [];
+        let allUnique = true;
         for (let i = 0; i < numPoints; i++) {
-            points.push(getRandomPoint(gridCols, gridRows));
+            let point = getRandomPoint(gridCols, gridRows);
+            let attempts = 0;
+            while (points.some(p => p.x === point.x && p.y === point.y)&&allUnique) {
+                point = getRandomPoint(gridCols, gridRows);
+                attempts++;
+                if (attempts > gridCols * gridRows) {
+                    console.log('Warning: Not all points are unique');
+                    allUnique = false;
+                }
+            }
+            points.push(point);
         }
         return points;
     }
@@ -43,11 +54,10 @@ class TspCalibrator {
         const twoOptTimes = [];
         for (let i = 0; i < iterations; i++) {
             // Setup antGen for testing
-            antGen.gridCols = Math.max(Math.ceil(Math.sqrt(numPoints)), 100);
-            antGen.gridRows = Math.max(Math.ceil(Math.sqrt(numPoints)), 100);
+            antGen.gridCols = Math.max(getRandom(Math.ceil(Math.sqrt(numPoints)), Math.ceil(Math.sqrt(numPoints))+100), 100);
+            antGen.gridRows = Math.max(getRandom(Math.ceil(Math.sqrt(numPoints)), Math.ceil(Math.sqrt(numPoints))+100), 100);
             antGen.init();
-            
-            const points = this.generateTestPoints(numPoints);
+            const points = this.generateTestPoints(numPoints, antGen.gridCols, antGen.gridRows);
             const start = antGen.startPos;
             const end = getRandomPoint(antGen.gridCols, antGen.gridRows)
             
@@ -180,8 +190,8 @@ class TspCalibrator {
         
         const { greedyConstant, twoOptConstant } = this.optimizedConstants;
         let newFunction = content.match(/\/\*\* Estimate tsp2Opt runtime[\s\S]*?estimatedMs:[\s\S]*?};[\s\S]*?}/)[0];
-        newFunction = newFunction.replace(/greedyConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g, `greedyTime = numPoints * numPoints * ${greedyConstant.toExponential(4)}`);
-        newFunction = newFunction.replace(/twoOptConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g, `twoOptTime = numPoints * numPoints * iterations * ${twoOptConstant.toExponential(4)}`);
+        newFunction = newFunction.replace(/greedyConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g, `greedyConstant = numPoints * numPoints * ${greedyConstant.toExponential(4)}`);
+        newFunction = newFunction.replace(/twoOptConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g, `twoOptConstant = numPoints * numPoints * iterations * ${twoOptConstant.toExponential(4)}`);
         return newFunction;
     }
 }
