@@ -356,12 +356,13 @@ const antGen = {
         return path;
     },
     /** Estimate tsp2Opt runtime based on number of points */
-    estimateTsp2OptTime: function(numPoints) {
-        const greedyTime = numPoints * numPoints * 0.0001;
+    estimateTsp2OptTime: function(numPoints, gridCols = this.gridCols, gridRows = this.gridRows ) {
+        const greedyConstant = 0.0001;
+        const twoOptConstant = 0.00001;
+        const greedyTime = numPoints * numPoints * greedyConstant;
         const iterations = Math.min(numPoints, 50);
-        const twoOptTime = numPoints * numPoints * iterations * 0.00001;
+        const twoOptTime = numPoints * numPoints * iterations * twoOptConstant;
         const totalTime = greedyTime + twoOptTime;
-
         return {
             estimatedMs: Math.round(totalTime * 100) / 100,
             greedyMs: Math.round(greedyTime * 100) / 100,

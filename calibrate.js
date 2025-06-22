@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import antGen from './index.js';
+import { getRandomPoint } from './utility.js'
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -26,10 +27,7 @@ class TspCalibrator {
     generateTestPoints(numPoints, gridCols = 100, gridRows = 100) {
         const points = [];
         for (let i = 0; i < numPoints; i++) {
-            points.push({
-                x: Math.floor(Math.random() * gridCols),
-                y: Math.floor(Math.random() * gridRows)
-            });
+            points.push(getRandomPoint(gridCols, gridRows));
         }
         return points;
     }
@@ -45,13 +43,13 @@ class TspCalibrator {
         const twoOptTimes = [];
         for (let i = 0; i < iterations; i++) {
             // Setup antGen for testing
-            antGen.gridCols = 100;
-            antGen.gridRows = 100;
+            antGen.gridCols = Math.max(Math.ceil(Math.sqrt(numPoints)), 100);
+            antGen.gridRows = Math.max(Math.ceil(Math.sqrt(numPoints)), 100);
             antGen.init();
             
             const points = this.generateTestPoints(numPoints);
-            const start = { x: 0, y: 0 };
-            const end = { x: 99, y: 99 };
+            const start = antGen.startPos;
+            const end = getRandomPoint(antGen.gridCols, antGen.gridRows)
             
             // Measure actual performance
             const allInfo = antGen.tsp2Opt(points, start, end, true);
@@ -182,8 +180,8 @@ class TspCalibrator {
         
         const { greedyConstant, twoOptConstant } = this.optimizedConstants;
         let newFunction = content.match(/\/\*\* Estimate tsp2Opt runtime[\s\S]*?estimatedMs:[\s\S]*?};[\s\S]*?}/)[0];
-        newFunction = newFunction.replace(/greedyTime \= numPoints \* numPoints \* [0-9]*\.[0-9]*e?-?[0-9]*/g, `greedyTime = numPoints * numPoints * ${greedyConstant.toExponential(4)}`);
-        newFunction = newFunction.replace(/twoOptTime \= numPoints \* numPoints \* iterations \* [0-9]*\.[0-9]*e?-?[0-9]*/g, `twoOptTime = numPoints * numPoints * iterations * ${twoOptConstant.toExponential(4)}`);
+        newFunction = newFunction.replace(/greedyConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g, `greedyTime = numPoints * numPoints * ${greedyConstant.toExponential(4)}`);
+        newFunction = newFunction.replace(/twoOptConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g, `twoOptTime = numPoints * numPoints * iterations * ${twoOptConstant.toExponential(4)}`);
         return newFunction;
     }
 }

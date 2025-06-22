@@ -23,8 +23,8 @@ class AutoCalibrator {
                 const indexPath = join(__dirname, 'index.js');
                 const content = fs.readFileSync(indexPath, 'utf8');
                 //console.log(content)
-                let greedyConstant = content.match(/greedyTime \= numPoints \* numPoints \* [0-9]*\.[0-9]*e?-?[0-9]*/g)[0];
-                let twoOptConstant = content.match(/twoOptTime \= numPoints \* numPoints \* iterations \* [0-9]*\.[0-9]*e?-?[0-9]*/g)[0];
+                let greedyConstant = content.match(/greedyConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g)[0];
+                let twoOptConstant = content.match(/twoOptConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g)[0];
                 greedyConstant = greedyConstant.split('* ')[2];
                 twoOptConstant = twoOptConstant.split('* ')[3];
                 return { greedyConstant: parseFloat(greedyConstant), twoOptConstant: parseFloat(twoOptConstant) };
@@ -57,8 +57,8 @@ class AutoCalibrator {
             const { greedyConstant, twoOptConstant } = this.calibrator.optimizedConstants;
             const functionRegex = /\/\*\* Estimate tsp2Opt runtime[\s\S]*?estimatedMs:[\s\S]*?};[\s\S]*?}/;
             let newFunction = content.match(functionRegex)[0];
-            newFunction = newFunction.replace(/greedyTime \= numPoints \* numPoints \* [0-9]*\.[0-9]*e?-?[0-9]*/g, `greedyTime = numPoints * numPoints * ${greedyConstant.toExponential(4)}`);
-            newFunction = newFunction.replace(/twoOptTime \= numPoints \* numPoints \* iterations \* [0-9]*\.[0-9]*e?-?[0-9]*/g, `twoOptTime = numPoints * numPoints * iterations * ${twoOptConstant.toExponential(4)}`);
+            newFunction = newFunction.replace(/greedyConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g, `greedyTime = numPoints * numPoints * ${greedyConstant.toExponential(4)}`);
+            newFunction = newFunction.replace(/twoOptConstant \= [0-9]*\.[0-9]*e?-?[0-9]*/g, `twoOptTime = numPoints * numPoints * iterations * ${twoOptConstant.toExponential(4)}`);
             if (functionRegex.test(content)) {
                 content = content.replace(functionRegex, newFunction);
                 
