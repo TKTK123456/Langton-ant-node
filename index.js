@@ -381,10 +381,10 @@ const antGen = {
     },
     /** Estimate tsp2Opt runtime based on number of points */
     estimateTsp2OptTime: function(numPoints, gridCols = this.gridCols, gridRows = this.gridRows ) {
+        const iterations = Math.min(numPoints, 50);
         let greedyConstant = 0.0001;
         let twoOptConstant = 0.00001;
         const greedyTime = numPoints * numPoints * greedyConstant;
-        const iterations = Math.min(numPoints, 50);
         const twoOptTime = numPoints * numPoints * iterations * twoOptConstant;
         const totalTime = greedyTime + twoOptTime;
         return {
