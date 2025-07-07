@@ -102,7 +102,7 @@ const antGen = {
       }
   },
     /**This is to parse the grid and generate the rules*/
-  parseGrid: function(resetJson = true, detailTsp = false) {
+  parseGrid: function(resetJson = true) {
       if (!this.gridInited) {
           this.init()
       }
@@ -120,7 +120,7 @@ const antGen = {
 
       let start = { x: this.startPos[0], y: this.startPos[1] };
       let end = { x: this.endPosDirc[0], y: this.endPosDirc[1] };
-      let path = this.tsp2Opt(goToPoints, start, end, false, detailTsp);
+      let path = this.tsp2Opt(goToPoints, start, end, false);
       // Generate moves same as before
       for (let i = 0; i < path.length - 1; i++) {
           const start = path[i];
@@ -298,7 +298,7 @@ const antGen = {
       };
   },
     /** 2-opt TSP solver with fixed start and end points */
-    tsp2Opt: function(points, start, end, calibrate = false, detailed = false) {
+    tsp2Opt: function(points, start, end, calibrate = false) {
         let calInfo = {}
         if (calibrate) {
             calInfo.startTime = performance.now()
@@ -328,19 +328,6 @@ const antGen = {
         if (calibrate) {
             calInfo.greedyTime = performance.now() - calInfo.startTime
         }
-        const detailInfo = {}
-        if (detailed) {
-            detailInfo.getFullPath = (p) => {
-                let fullPath = []
-                for (let i = 0; i < p.length-1; i++) {
-                    let pathXY = this.getPath(p[i], p[i+1]).pathXY;
-                    fullPath.push(pathXY);
-                }
-                return fullPath;
-            };
-            detailInfo.currentFullPath = detailInfo.getFullPath(path);
-            detailInfo.currentPath = path;
-        }
         let improved = true;
         while (improved) {
             improved = false;
@@ -355,20 +342,8 @@ const antGen = {
                         for (let left = i, right = k; left < right; left++, right--) {
                             [path[left], path[right]] = [path[right], path[left]];
                         }
-                        if (detailed) {
-                            detailInfo.newFullPath = detailInfo.getFullPath(path);
-                            if (detailInfo.newFullPath.length < detailInfo.currentFullPath.length) {
-                                detailInfo.currentFullPath = detailInfo.newFullPath;
-                                detailInfo.currentPath = path;
-                                improved = true;
-                                break outer;
-                            } else {
-                                path = detailInfo.currentPath;
-                            }
-                        } else {
                             improved = true;
                             break outer;
-                        }
                     }
                 }
             }
