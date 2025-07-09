@@ -328,22 +328,27 @@ const antGen = {
         if (calibrate) {
             calInfo.greedyTime = performance.now() - calInfo.startTime
         }
+        function fullPathDist(path) {
+            let dist = 0
+            for (let i = 1;i<path.length;i++) {
+                dist += dist(path[i - 1], path[i])
+            }
+            return dist
+        }
         let improved = true;
         while (improved) {
             improved = false;
             outer: for (let i = 1; i < path.length - 2; i++) {
                 for (let k = i + 1; k < path.length - 1; k++) {
-                    const a = path[i - 1], b = path[i];
-                    const c = path[k], d = path[k + 1];
-                    const before = dist(a, b) + dist(c, d);
-                    const after = dist(a, c) + dist(b, d);
+                    const newPath = path.slice(0, i)
+                        .concat(path.slice(i, k + 1).reverse())
+                        .concat(path.slice(k + 1));
+                    const before = fullPathDist(path)
+                    const after = fullPathDist(newPath)
                     if (after < before) {
-                        // Reverse the middle segment
-                        for (let left = i, right = k; left < right; left++, right--) {
-                            [path[left], path[right]] = [path[right], path[left]];
-                        }
-                            improved = true;
-                            break outer;
+                        path = newPath
+                        improved = true;
+                        break outer;
                     }
                 }
             }
